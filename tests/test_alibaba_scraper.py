@@ -1,0 +1,97 @@
+import types
+
+from scraper.alibaba_scraper import AlibabaScraper
+
+
+class FakeLocator:
+    def __init__(self, text):
+        self._text = text
+
+    def inner_text(self):
+        return self._text
+
+
+class FakeItem:
+    def __init__(self, title, price):
+        self._title = title
+        self._price = price
+
+    def locator(self, sel):
+        if "title" in sel:
+            return FakeLocator(self._title)
+        if "price" in sel:
+            return FakeLocator(self._price)
+        return FakeLocator("")
+
+
+class FakePage:
+    def __init__(self, items):
+        self._items = items
+
+    def goto(self, url):
+        self._url = url
+
+    def wait_for_timeout(self, t):
+        pass
+
+    def locator(self, sel):
+        # return an object with .all() returning items
+        class L:
+            def __init__(self, items):
+                self._items = items
+
+            def all(self):
+                return self._items
+
+        return L(self._items)
+
+
+class FakeBrowser:
+    def __init__(self, items):
+        self._items = items
+
+    def new_page(self):
+        return FakePage(self._items)
+
+    def close(self):
+        pass
+
+
+class FakeChromium:
+    def __init__(self, items):
+        self._items = items
+
+    def launch(self, headless=True):
+        return FakeBrowser(self._items)
+
+
+class FakePlaywright:
+    def __init__(self, items):
+        self.chromium = FakeChromium(items)
+
+
+class FakeCtxManager:
+    def __init__(self, items):
+        self._items = items
+
+    def __enter__(self):
+        return FakePlaywright(self._items)
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+def test_alibaba_scraper_monkeypatch(monkeypatch):
+    fake_items = [FakeItem("T1", "$1"), FakeItem("T2", "$2")]
+
+    def fake_sync_playwright():
+        return FakeCtxManager(fake_items)
+
+    import scraper.alibaba_scraper as mod
+    monkeypatch.setattr(mod, "sync_playwright", fake_sync_playwright)
+
+    s = AlibabaScraper()
+    products = s.run("phone", max_results=1)
+    assert isinstance(products, list)
+    assert products[0]["title"] == "T1"
+    assert products[0]["price"] == "$1"
