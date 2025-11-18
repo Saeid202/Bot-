@@ -1,10 +1,32 @@
-from scraper.alibaba_scraper import AlibabaScraper #from the scraper folder access alibaba_scraper and import he AlibabaScraper class
-from scraper.normalize import normalize_product
-from .website_api import (
-    start_import_job,
-    insert_imported_products,
-    complete_import_job
-)
+import sys
+from pathlib import Path
+# Allow running this file directly by patching sys.path if needed
+
+try:
+    from scraper.alibaba_scraper import AlibabaScraper
+    from scraper.normalize import normalize_product
+except ModuleNotFoundError:
+    ROOT = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(ROOT))
+    from scraper.alibaba_scraper import AlibabaScraper
+    from scraper.normalize import normalize_product
+
+# Supabase config and insert function (always defined)
+import requests
+SUPABASE_URL = "https://pbkbefdxgskypehrrgvq.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBia2JlZmR4Z3NreXBlaHJyZ3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MjE5NzcsImV4cCI6MjA3ODk5Nzk3N30.r8bq63S5SjYdennWWjN9rWyH_ga15gvwhcZH-yByhW0"
+def insert_products_supabase(products):
+    url = f"{SUPABASE_URL}/rest/v1/products"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
+    resp = requests.post(url, json=products, headers=headers)
+    resp.raise_for_status()
+    return resp.json()
+
 
 def run_bot(query="power bank", max_results=5):
     print("Scraping products...")
@@ -15,15 +37,22 @@ def run_bot(query="power bank", max_results=5):
 
     normalized = [normalize_product(p) for p in raw_products]
 
-    print("Connecting to your website...")
-    job_id = start_import_job(query, "alibaba", max_results)
+    # Map normalized fields to Supabase columns (adjust as needed)
+    supabase_products = []
+    for p in normalized:
+        supabase_products.append({
+            "name": p["title"],
+            "price": p["price"],
+            "source": p.get("source", "Alibaba"),
+            # Add more fields here if needed
+        })
 
-    print(f"Import job created: {job_id}")
-    insert_imported_products(job_id, normalized)
-    complete_import_job(job_id)
-
-    print("✔ Import completed!")
-    print(f"✔ {len(normalized)} products inserted into your Seller Dashboard")
+    print("Inserting products into Supabase...")
+    try:
+        inserted = insert_products_supabase(supabase_products)
+        print(f"✔ {len(inserted)} products inserted into Supabase.")
+    except Exception as e:
+        print(f"❌ Failed to insert products: {e}")
 
 if __name__ == "__main__":
     run_bot()

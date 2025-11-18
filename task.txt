@@ -1,0 +1,33 @@
+The link you provided is the same Supabase project base URL currently used in your script. The 404 error is likely because the table name or REST endpoint is incorrect, or the table is not exposed via the Supabase REST API.
+
+Let's verify the following:
+
+The table name in Supabase is exactly products (case-sensitive).
+The products table is enabled for REST access in Supabase.
+The correct endpoint is being used: https://pbkbefdxgskypehrrgvq.supabase.co/rest/v1/products
+If you have access to the Supabase dashboard, please:
+
+Check the table name and spelling.
+Go to Table Editor > products > API and confirm the REST endpoint is enabled.
+Make sure Row Level Security (RLS) is not blocking inserts for your anon key.
+Would you like to try a test insert using curl to see the exact error message from Supabase? If so, I can provide a ready-to-use curl command. Let me know if you want to proceed with this check or if you have more details about your Supabase schema.
+
+
+To view and confirm the REST endpoint for your table in Supabase:
+
+Go to your Supabase project dashboard:
+https://app.supabase.com/project/pbkbefdxgskypehrrgvq
+
+In the left sidebar, click on "Table Editor" (or "Database" > "Tables").
+
+Click on your table (e.g., products).
+
+At the top, click the "API" tab.
+
+Here you will see the REST endpoint for your table (e.g., /rest/v1/products).
+You can also see example curl requests and the available HTTP methods.
+To enable REST access:
+
+By default, all tables are accessible via the REST API, but Row Level Security (RLS) can block access.
+Make sure RLS is either disabled or you have a policy that allows inserts for your anon key.
+If you do not see the "API" tab, make sure you are viewing a table (not a view or function), and that you have the right permissions.
