@@ -25,22 +25,46 @@ class FakeItem:
         self._price = price
 
     def locator(self, sel):
-        if "title" in sel:
+        # Support both original selectors and fallback selectors
+        if "title" in sel or "element-title" in sel:
             return FakeLocator(self._title)
-        if "price" in sel:
+        if "price" in sel or "element-offer-price" in sel:
             return FakeLocator(self._price)
+        # For fallback selectors like "h2, .title, [class*='title']"
+        if any(x in sel for x in ["title", "h2"]):
+            class FakeLocatorWithFirst:
+                def __init__(self, text):
+                    self._text = text
+                def first(self):
+                    return FakeLocator(self._text)
+            return FakeLocatorWithFirst(self._title)
+        if "price" in sel:
+            class FakeLocatorWithFirst:
+                def __init__(self, text):
+                    self._text = text
+                def first(self):
+                    return FakeLocator(self._text)
+            return FakeLocatorWithFirst(self._price)
         return FakeLocator("")
 
 
 class FakePage:
     def __init__(self, items):
         self._items = items
+        self._headers = {}
 
-    def goto(self, url):
+    def goto(self, url, wait_until=None, timeout=None):
         self._url = url
 
     def wait_for_timeout(self, t):
         pass
+    
+    def wait_for_selector(self, selector, timeout=None):
+        # Simulate finding items
+        pass
+
+    def set_extra_http_headers(self, headers):
+        self._headers = headers
 
     def locator(self, sel):
         # return an object with .all() returning items
@@ -54,12 +78,26 @@ class FakePage:
         return L(self._items)
 
 
+class FakeContext:
+    def __init__(self, items):
+        self._items = items
+    
+    def new_page(self):
+        return FakePage(self._items)
+    
+    def add_init_script(self, script):
+        pass
+    
+    def close(self):
+        pass
+
+
 class FakeBrowser:
     def __init__(self, items):
         self._items = items
 
-    def new_page(self):
-        return FakePage(self._items)
+    def new_context(self, **kwargs):
+        return FakeContext(self._items)
 
     def close(self):
         pass
@@ -69,7 +107,7 @@ class FakeChromium:
     def __init__(self, items):
         self._items = items
 
-    def launch(self, headless=True):
+    def launch(self, headless=True, args=None):
         return FakeBrowser(self._items)
 
 
