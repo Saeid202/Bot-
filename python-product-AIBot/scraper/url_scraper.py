@@ -13,7 +13,12 @@ if sys.platform == 'win32':
         # Fallback to Selector if Proactor not available
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import sync_playwright
+except Exception:
+    # Playwright may not be installed in test environments; allow
+    # importing this module and let callers mock or handle absence.
+    sync_playwright = None
 import random
 import time
 
@@ -31,6 +36,11 @@ class URLScraper:
         Returns:
             List of product dictionaries with title, price, and source
         """
+        # If Playwright is not available, inform and return empty list
+        if sync_playwright is None:
+            print("Playwright is not installed or available in this environment. Skipping scrape.")
+            return []
+
         # Ensure event loop policy is set (double-check)
         if sys.platform == 'win32':
             import asyncio
