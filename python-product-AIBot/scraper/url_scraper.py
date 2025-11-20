@@ -13,8 +13,15 @@ if sys.platform == 'win32':
         # Fallback to Selector if Proactor not available
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+from typing import TYPE_CHECKING
+import importlib
+
+if TYPE_CHECKING:
+    from playwright.sync_api import sync_playwright  # type: ignore
+
 try:
-    from playwright.sync_api import sync_playwright
+    _pw_mod = importlib.import_module("playwright.sync_api")
+    sync_playwright = _pw_mod.sync_playwright
 except Exception:
     # Playwright may not be installed in test environments; allow
     # importing this module and let callers mock or handle absence.

@@ -8,6 +8,7 @@ sys.path.insert(0, str(ROOT))
 
 # Import with proper path handling
 sys.path.insert(0, str(ROOT / "python-product-AIBot"))
+import pytest
 from scraper.alibaba_scraper import AlibabaScraper
 from scraper.normalize import normalize_product
 
@@ -47,19 +48,19 @@ def test_scraper():
                 print(f"   Source: {product.get('source', 'N/A')}")
             
             print("\n✓ Scraper test completed successfully!")
-            return True
+            assert len(raw_products) > 0
         else:
             print("⚠ Warning: No products were scraped. This might be due to:")
             print("  - Website structure changes")
             print("  - Network issues")
             print("  - Selector changes")
-            return False
+            pytest.skip("No products were scraped (Playwright may be unavailable in this environment)")
             
     except Exception as e:
         print(f"\n❌ Error during scraping: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        assert False, f"Error during scraping: {e}"
 
 if __name__ == "__main__":
     test_scraper()

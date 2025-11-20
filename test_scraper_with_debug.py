@@ -10,10 +10,23 @@ if sys.platform == 'win32':
     if hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-from playwright.async_api import async_playwright
+from typing import TYPE_CHECKING
+import importlib
+
+if TYPE_CHECKING:
+    from playwright.async_api import async_playwright  # type: ignore
+
+try:
+    _pw_mod = importlib.import_module("playwright.async_api")
+    async_playwright = _pw_mod.async_playwright
+except Exception:
+    async_playwright = None
 
 async def debug_page(url):
     """Debug what's actually on the page"""
+    if async_playwright is None:
+        print("Playwright is not installed or available in this environment. Install Playwright to run this debug script.")
+        return
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)  # Visible
         context = await browser.new_context(

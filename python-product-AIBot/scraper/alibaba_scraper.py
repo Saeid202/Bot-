@@ -1,5 +1,12 @@
+from typing import TYPE_CHECKING
+import importlib
+
+if TYPE_CHECKING:
+    from playwright.sync_api import sync_playwright  # type: ignore
+
 try:
-    from playwright.sync_api import sync_playwright
+    _pw_mod = importlib.import_module("playwright.sync_api")
+    sync_playwright = _pw_mod.sync_playwright
 except Exception:
     # In test environments playwright may not be installed; allow tests
     # to monkeypatch `sync_playwright` on the module.

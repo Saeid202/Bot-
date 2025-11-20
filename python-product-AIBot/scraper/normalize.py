@@ -15,7 +15,7 @@ def normalize_product(raw: Dict[str, Any]) -> Dict[str, Any]:
     normalized = {
         "title": raw.get("title", "").strip(),
         "price": raw.get("price", "").strip(),
-        "source": raw.get("source", "Unknown"),
+        "source": raw.get("source", "Alibaba"),
         "description": raw.get("description", "").strip(),
         "images": _normalize_images(raw.get("images", [])),
         "rating": _normalize_rating(raw.get("rating")),

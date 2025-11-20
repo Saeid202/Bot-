@@ -12,8 +12,15 @@ if sys.platform == 'win32':
     elif hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+from typing import TYPE_CHECKING
+import importlib
+
+if TYPE_CHECKING:
+    from playwright.async_api import async_playwright  # type: ignore
+
 try:
-    from playwright.async_api import async_playwright
+    _pw_mod = importlib.import_module("playwright.async_api")
+    async_playwright = _pw_mod.async_playwright
 except Exception:
     # Playwright may not be installed in test environments; allow
     # tests to import BaseScraper and mock/playwright usage later.
