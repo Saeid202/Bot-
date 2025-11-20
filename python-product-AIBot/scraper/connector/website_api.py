@@ -3,7 +3,7 @@ import requests
 from typing import Iterable, Mapping, Any
 
 # Make the API base configurable via env var for testing and deployment.
-BASE = os.getenv("SCRAPER_API_BASE", "https://localhost:3000/dashboard/products")
+BASE = os.getenv("SCRAPER_API_BASE", "https://localhost:3000/api/scraper")
 
 
 def _post(path: str, json: Mapping[str, Any], timeout: int = 10):
